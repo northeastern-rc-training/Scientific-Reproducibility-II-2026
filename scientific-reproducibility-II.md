@@ -8,7 +8,8 @@
 ---
 Khurshid Shaymardanov \
 HPC Systems Engineer \
-[Research Computing (RC)] (https://rc.northeastern.edu/research-computing-team/)
+Research Computing (RC) 
+https://rc.northeastern.edu/research-computing-team/
 
 # Version Control in Research — Git Walkthrough
 **HPC Training Series · Scientific Reproducibility II**
