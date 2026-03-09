@@ -1,9 +1,7 @@
 # Research Computing Training
 ---
 
-<p align="center">
-  <img src="logo.png" alt="NEULogo" width="150">
-</p>
+<img src="images/logo.png" alt="drawing" width="900"/>
 
 
 ## Presenter
