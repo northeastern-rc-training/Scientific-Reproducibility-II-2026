@@ -8,7 +8,7 @@
 ---
 Khurshid Shaymardanov \
 HPC Systems Engineer \
-Research Computing (RC) 
+Research Computing (RC) \
 https://rc.northeastern.edu/research-computing-team/
 
 # Version Control in Research — Git Walkthrough
@@ -70,7 +70,7 @@ With Git, you run `git log` and the answer is right there.
 | Your postdoc leaves; new hire must rerun job | Clone repo, read README, exact commands in history |
 | HPC config changed, broke pipeline | `git diff HEAD~1 slurm.conf` — spot it immediately |
 | Collaboration across 3 institutions | Fork → branch → pull request; no emailing scripts |
-| Publishing code alongside paper | Tag release → Zenodo → citable DOI |
+| Publishing code alongside paper | Tag release → projects → [github repo] → citable DOI |
 
 ### 💡 The Git Mental Model
 
@@ -105,8 +105,32 @@ Run this first. Everything needed should already be on your system.
 
 
 ```python
+# Prerequites:
+
+## SSHing into the cluster
+ssh username@login.explorer.northeastern.edu
+
+ssh k.shaymardanov@login.explorer.northeastern.edu
+
+## For CLI (which is encouraged way to do), pick a compute node from short partition 
+[k.shaymardanov@explorer-02 ~]$ srun --partition=short --pty bash
+
+## For OOD option, use following steps to get ready for this session:
+https://ood.explorer.northeastern.edu/pun/sys/dashboard > 
+Standard Apps > 
+Jupyter Notebook > 
+username, short partition, 1 hr, 2 cores, work dir: /home/username/git-training
+
+## If the git-training is missing, you can create any dir that you would prefer and cd into it
+cd /home/username/git-training
+
+## Once the working directory is ready, clone the repo to start working on the training
+git clone https://github.com/northeastern-rc-training/Scientific-Reproducibility-II-2026.git
+```
+
+
+```python
 # Check all required tools
-echo '=== Required tools ==='
 for tool in git bash awk grep sort uniq wc cut; do
     if command -v $tool &>/dev/null; then
         echo "  OK  $tool  ($($tool --version 2>&1 | head -1))"
@@ -115,8 +139,7 @@ for tool in git bash awk grep sort uniq wc cut; do
     fi
 done
 
-echo ''
-echo '=== Git identity ==='
+# Check if GitHub credentials are in place
 echo "  name:  $(git config --global user.name  || echo 'NOT SET — run: git config --global user.name "Your Name"')"
 echo "  email: $(git config --global user.email || echo 'NOT SET — run: git config --global user.email "you@uni.edu"')"
 ```
@@ -150,11 +173,11 @@ awk 'BEGIN {
     }
 }' /dev/null > data/counts.tsv
 
-echo 'Dimensions:'
+# Check on "Dimensions"
 echo "  Rows (genes + header): $(wc -l < data/counts.tsv)"
 echo "  Columns:               $(head -1 data/counts.tsv | awk '{print NF}')"
-echo ''
-echo 'First 5 rows:'
+
+# First 5 rows of the file we have just created
 head -5 data/counts.tsv | column -t
 ```
 
@@ -258,7 +281,7 @@ cd rnaseq_project
 
 git init
 
-# Set identity if not already configured globally
+# Set identity if not already configured globally if not done yet
 git config user.name  'Research User'
 git config user.email 'user@university.edu'
 
@@ -272,7 +295,7 @@ ls -la | grep git
 Results, logs, and large data files should **not** go in Git.
 Track the code that makes them, not the files themselves.
 
-Large data lives in your institutional storage or Zenodo — not in a git repo.
+Large data lives in your institutional storage or /projects — not in a git repo.
 
 
 ```python
@@ -335,6 +358,25 @@ bash scripts/filter_and_summarise.sh
 # Output: results/summary.tsv
 ```
 
+## The structure of the project
+
+rnaseq_project
+├── data
+│   └── counts.tsv
+├── README.md
+├── results
+│   ├── run.log
+│   ├── slurm_job_id.err
+│   ├── slurm_job_id.out
+│   └── summary.tsv
+├── scripts
+│   ├── charts
+│   │   ├── bar_status.sh
+│   │   └── hist_foldchange.sh
+│   └── filter_and_summarise.sh
+└── slurm
+    └── run_pipeline.sh
+
 ## Parameters
 
 All parameters are defined at the top of `scripts/filter_and_summarise.sh`.  
@@ -346,10 +388,8 @@ The exact values used in each run are recorded in `results/run.log`.
 
 ## Data availability
 
-Raw counts: [Zenodo / institutional repo link]
+Raw counts: [/projects]
 EOF
-
-echo 'README.md written'
 ```
 
 ---
@@ -367,19 +407,12 @@ Three commands you will use dozens of times:
 ```python
 cd rnaseq_project
 
-echo '=== git status ==='
 git status
 
-echo ''
-echo '=== Stage everything ==='
 git add .
 
-echo ''
-echo '=== Commit ==='
 git commit -m 'Initial pipeline: filter script, README, .gitignore'
 
-echo ''
-echo '=== History ==='
 git log --oneline
 ```
 
@@ -400,15 +433,13 @@ bash scripts/filter_and_summarise.sh
 ```python
 cd rnaseq_project
 
-echo '=== First 10 results ==='
+# first 10 lines of the output from the previous script execution
 head -10 results/summary.tsv | column -t
 
-echo ''
-echo '=== Status breakdown ==='
+# Status breakdown
 awk 'NR>1 {print $5}' results/summary.tsv | sort | uniq -c | sort -rn
 
-echo ''
-echo '=== Top 5 upregulated genes ==='
+# Top 5 upregulated genes
 awk 'NR>1 && $5=="UP" {print}' results/summary.tsv \
     | sort -t$'\t' -k4 -rn \
     | head -5 \
@@ -468,7 +499,7 @@ cd rnaseq_project
 # Make a small change: raise the threshold
 sed -i 's/MIN_COUNT=10/MIN_COUNT=20/' scripts/filter_and_summarise.sh
 
-echo '=== What changed? ==='
+# What changed? 
 git diff scripts/filter_and_summarise.sh
 ```
 
@@ -478,8 +509,7 @@ cd rnaseq_project
 
 bash scripts/filter_and_summarise.sh
 
-echo ''
-echo '=== Status breakdown with MIN_COUNT=20 ==='
+# Status breakdown with MIN_COUNT=20 
 awk 'NR>1 {print $5}' results/summary.tsv | sort | uniq -c
 
 git add scripts/filter_and_summarise.sh results/summary.tsv results/run.log
@@ -498,15 +528,13 @@ Every line of your history is a documented decision.
 ```python
 cd rnaseq_project
 
-echo '=== Compact log ==='
+# Compact log 
 git log --oneline
 
-echo ''
-echo '=== Detailed log ==='
+# Detailed log 
 git log --stat
 
-echo ''
-echo '=== Search for a specific change ==='
+# Search for a specific change 
 git log --oneline --grep='MIN_COUNT'
 ```
 
@@ -526,12 +554,8 @@ cd rnaseq_project
 # Create and switch to a branch
 git switch -c explore/fc-cutoff-1.5
 
-echo 'Branches:'
+# Listing the branches
 git branch --list
-
-echo ''
-echo 'You are now on a new branch.'
-echo 'main is unchanged. Experiment freely here.'
 ```
 
 
@@ -552,7 +576,7 @@ cd rnaseq_project
 
 bash scripts/filter_and_summarise.sh
 
-echo '=== Results with FC cutoff 1.5 ==='
+# Results with FC cutoff 1.5 from above change
 awk 'NR>1 {print $5}' results/summary.tsv | sort | uniq -c
 
 git add scripts/filter_and_summarise.sh results/summary.tsv results/run.log
@@ -566,17 +590,15 @@ cd rnaseq_project
 # Switch back to main — original script is exactly as you left it
 git switch main
 
-echo '=== FC cutoffs in main script ==='
+# FC cutoffs in main script 
 grep 'fc >=' scripts/filter_and_summarise.sh
-
-echo ''
-echo 'main is untouched. The experiment exists only on its branch.'
 ```
 
 ---
 ## 11. Merge — Bringing Results Back
 
-The relaxed cutoff looks good. You decide to include it in the revised submission.
+The relaxed cutoff looks good. You decide to include it in the revised (which normally can happen as PR or pull request in GitHub) submission.
+If you are the only person doing the ressearch, then doing the following
 Merge the branch into main.
 
 
@@ -586,13 +608,11 @@ cd rnaseq_project
 git merge explore/fc-cutoff-1.5 --no-ff \
   -m 'Merge explore/fc-cutoff-1.5: FC >= 1.5 for revised submission'
 
-echo ''
-echo '=== Full history ==='
+# Full history 
 git log --oneline --graph --all
 
-echo ''
+# once the project is merged, then we dont need the exploration branch anymore and thus we will delete it
 git branch -d explore/fc-cutoff-1.5
-echo 'Branch deleted — it served its purpose.'
 ```
 
 ---
@@ -609,16 +629,16 @@ cd rnaseq_project
 git tag -a v1.0-submission \
   -m 'Code submitted to journal, 2025-09-01. MIN_COUNT=20, FC=1.5'
 
-echo '=== Tags ==='
+# Existing tags
 git tag -l -n1
 
-echo ''
 git log --oneline --graph
 
-echo ''
-echo 'Push with:'
-echo '  git push origin main'
-echo '  git push origin v1.0-submission   # tags need explicit push'
+# Once things look good, we can then push (upload) the data into the remote repository which is a GitHub
+git push origin main
+
+# tags need explicit push'
+git push origin v1.0-submission   
 ```
 
 ---
@@ -632,11 +652,10 @@ You don't need to remember. Git remembers.
 ```python
 cd rnaseq_project
 
-echo '=== Full history ==='
+# Full history
 git log --oneline
 
-echo ''
-echo '=== Find the commit with MIN_COUNT=10 ==='
+# Finding the commit with MIN_COUNT=10
 git log --oneline --grep='MIN_COUNT=10'
 ```
 
@@ -651,20 +670,15 @@ echo "Restoring script from commit: $HASH"
 # Restore just that one file — working tree only, not a full checkout
 git checkout $HASH -- scripts/filter_and_summarise.sh
 
-echo ''
 grep 'MIN_COUNT\|fc >=' scripts/filter_and_summarise.sh
 
-echo ''
 bash scripts/filter_and_summarise.sh
 
-echo ''
-echo '=== Status breakdown at MIN_COUNT=10 ==='
+# Status breakdown at MIN_COUNT=10 
 awk 'NR>1 {print $5}' results/summary.tsv | sort | uniq -c
 
 # Restore current version
 git checkout HEAD -- scripts/filter_and_summarise.sh
-echo ''
-echo 'Current version restored.'
 ```
 
 ---
@@ -889,20 +903,17 @@ git log --oneline --graph --all --decorate
 
 git config --global alias.lg 'log --oneline --graph --all --decorate'
 
-echo '=== git lg (your new alias) ==='
+# git lg (your new alias) 
 cd rnaseq_project && git lg
 
-echo ''
-echo 'Two more useful aliases:'
+# Two more useful aliases:
 git config --global alias.st   'status --short --branch'
 git config --global alias.last 'log -1 --stat'
 
-echo ''
-echo '=== git st ==='
+#git st 
 cd rnaseq_project && git st
 
-echo ''
-echo '=== git last ==='
+# git last 
 cd rnaseq_project && git last
 ```
 
@@ -922,14 +933,16 @@ git_branch() {
 }
 
 cd rnaseq_project
-echo "On main:              rnaseq_project$(git_branch)"
 
+# Let's make sure we are on main branch
+echo "rnaseq_project$(git_branch)"
+
+# creating and switching to demo/promt-test branch
 git switch -c demo/prompt-test 2>/dev/null
-echo "On feature branch:    rnaseq_project$(git_branch)"
 
+# switching back to main and deleting the test branch
 git switch main
 git branch -d demo/prompt-test
-echo "Back on main:         rnaseq_project$(git_branch)"
 ```
 
 ---
@@ -1056,16 +1069,17 @@ cd rnaseq_project
 git add scripts/charts/
 git commit -m 'feat: add bar chart and fold-change histogram (ASCII, awk-only)'
 
-echo '=== Branch graph ==='
+# Branch graph 
 git lg
 
-echo ''
+# Switching to main branch
 git switch main
+
+# Merging the exploratory brnach into main and removing the left over
 git merge explore/cli-charts --no-ff -m 'Merge explore/cli-charts: bar + histogram charts'
 git branch -d explore/cli-charts
 
-echo ''
-echo '=== Final graph ==='
+# Final graph
 git lg
 ```
 
@@ -1130,7 +1144,6 @@ Git marks conflicts with `<<<<<<<` markers in files. Open the file, choose which
 - 📖 **Pro Git book** (free) — [git-scm.com/book](https://git-scm.com/book) — the definitive reference
 - 🔬 **The Turing Way** — [book.the-turing-way.org](https://book.the-turing-way.org) — research software engineering & reproducibility
 - 🗃️ **DVC** — [dvc.org](https://dvc.org) — version control for data & ML experiments
-- 📦 **Zenodo** — [zenodo.org](https://zenodo.org) — citable DOIs for code in 3 clicks
 - 🎮 **Learn Git Branching** — [learngitbranching.js.org](https://learngitbranching.js.org) — interactive visual tutorial
 - 🚫 **gitignore.io** — [toptal.com/developers/gitignore](https://www.toptal.com/developers/gitignore) — auto-generate .gitignore for any stack
 
