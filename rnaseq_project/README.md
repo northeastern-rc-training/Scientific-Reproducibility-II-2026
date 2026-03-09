@@ -19,18 +19,18 @@ bash scripts/filter_and_summarise.sh
 
 ## The structure of the project
 
-rnaseq_project
-├── data
-│   └── counts.tsv
-├── README.md
-├── results
-├── scripts
-│   ├── charts
-│   │   ├── bar_status.sh
-│   │   └── hist_foldchange.sh
-│   └── filter_and_summarise.sh
-└── slurm
-    └── run_pipeline.sh
+rnaseq_project \
+├── data \
+│   └── counts.tsv \
+├── README.md \
+├── results \
+├── scripts \
+│   ├── charts \
+│   │   ├── bar_status.sh \
+│   │   └── hist_foldchange.sh \
+│   └── filter_and_summarise.sh \
+└── slurm \
+    └── run_pipeline.sh 
 
 ## Parameters
 
