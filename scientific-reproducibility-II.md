@@ -155,6 +155,7 @@ In a real project this file would be the output of a read-counting tool
 
 
 ```python
+cd /projects/username
 mkdir -p rnaseq_project/{data,results,scripts,slurm}
 cd rnaseq_project
 
@@ -1150,10 +1151,4 @@ Git marks conflicts with `<<<<<<<` markers in files. Open the file, choose which
 ---
 
 ### 🔜 Next in the Series
-
-**Part III: Containers & Singularity** — Fully portable research environments for HPC (no root required)
-
----
-*Slides + notebook: `github.com/hpc-training/reproducibility-series`*
-
 
